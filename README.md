@@ -1,70 +1,113 @@
-# Getting Started with Create React App
+# React Module Federation Example
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is now structured as a real micro-frontend example with three separate apps:
 
-## Available Scripts
+- `host/` - shell application that renders the page and consumes remote modules
+- `app1/` - remote application exposing a product catalog widget
+- `app2/` - remote application exposing a team/profile widget
 
-In the project directory, you can run:
+## Why This Matches Real Micro Frontends Better
 
-### `npm start`
+You mentioned the mental model correctly: in practice, micro frontends are often separate projects that come together in one UI. This repo now reflects that idea directly.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Instead of one `src/` pretending to have multiple apps, you now have:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```text
+host/
+app1/
+app2/
+```
 
-### `npm test`
+Each app has its own:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- `src/`
+- `webpack.config.js`
+- entry point
+- UI
 
-### `npm run build`
+The host loads remote modules from `app1` and `app2` using Webpack Module Federation.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Ports
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Host: `http://localhost:3000`
+- App 1 remote: `http://localhost:3001`
+- App 2 remote: `http://localhost:3002`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Run The Apps
 
-### `npm run eject`
+Open three terminals in the project root and run:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+npm run start:app1
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm run start:app2
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+npm run start:host
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Then open `http://localhost:3000`.
 
-## Learn More
+## Build
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm run build
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+This builds all three apps in this order:
 
-### Code Splitting
+1. `app1`
+2. `app2`
+3. `host`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## What To Look At
 
-### Analyzing the Bundle Size
+### Host
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- [host/webpack.config.js](/Users/gauravyadav/Desktop/react-redux-thunk-demo/host/webpack.config.js:1)
+- [host/src/App.js](/Users/gauravyadav/Desktop/react-redux-thunk-demo/host/src/App.js:1)
 
-### Making a Progressive Web App
+The host defines remotes:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- `app1@http://localhost:3001/remoteEntry.js`
+- `app2@http://localhost:3002/remoteEntry.js`
 
-### Advanced Configuration
+and renders components exposed by those remote apps.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### App 1
 
-### Deployment
+- [app1/webpack.config.js](/Users/gauravyadav/Desktop/react-redux-thunk-demo/app1/webpack.config.js:1)
+- [app1/src/ProductCatalog.js](/Users/gauravyadav/Desktop/react-redux-thunk-demo/app1/src/ProductCatalog.js:1)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+This remote exposes:
 
-### `npm run build` fails to minify
+- `./ProductCatalog`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### App 2
+
+- [app2/webpack.config.js](/Users/gauravyadav/Desktop/react-redux-thunk-demo/app2/webpack.config.js:1)
+- [app2/src/TeamProfile.js](/Users/gauravyadav/Desktop/react-redux-thunk-demo/app2/src/TeamProfile.js:1)
+
+This remote exposes:
+
+- `./TeamProfile`
+
+## Module Federation Flow
+
+1. `app1` and `app2` run on their own ports and publish `remoteEntry.js`
+2. `host` declares those remotes in its webpack config
+3. `host/src/App.js` imports remote modules using:
+   - `import("app1/ProductCatalog")`
+   - `import("app2/TeamProfile")`
+4. The host renders them into one page
+
+## Legacy Folder
+
+The old `src/` folder is still in the repo from the earlier single-app learning demo, but the active micro-frontend example now lives in:
+
+- `host/`
+- `app1/`
+- `app2/`
