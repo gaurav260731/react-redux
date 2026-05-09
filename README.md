@@ -110,4 +110,4 @@ The old `src/` folder is still in the repo from the earlier single-app learning 
 
 - `host/`
 - `app1/`
-- `app2/`
+- `app2/
